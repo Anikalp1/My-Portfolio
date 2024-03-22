@@ -24,7 +24,7 @@ export default function ContentList({items, contentType, fallbackItemImage, view
     const [currentItem, setCurrentItem] = useState<null | number>(null)
 
     const lastMousePos = useRef({x: 0, y: 0});
-    const urlPrefix = contentType === "Blog" ? "/blog" : "/project";
+    const urlPrefix = contentType === "Blog" ? "/blog" : "/projects";
 
     useEffect(()=> {
         let ctx = gsap.context(()=> {
@@ -125,7 +125,7 @@ export default function ContentList({items, contentType, fallbackItemImage, view
             {items.map((item, index)=> (
                 <>
                 {isFilled.keyText(item.data.title) && (
-            <li key={index} className='list-item opacity-0f'
+            <li key={index} className='list-item opacity-0'
             onMouseEnter={()=> onMouseEnter(index)}
             ref={(el) => (
                 itemsRef.current[index] = el
@@ -137,7 +137,7 @@ export default function ContentList({items, contentType, fallbackItemImage, view
 
                 >
                     <div className='flex flex-col'>
-                        <span className='text-3xl font-bold'>{item.data.title}</span>
+                        <span className=' font-bold text-3xl'>{item.data.title}</span>
                         <div className='flex gap-3 text-yellow-400 text-lg
                         font-bold'>
                             {item.tags.map((tag, index)=>(
