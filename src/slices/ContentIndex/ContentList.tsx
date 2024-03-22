@@ -3,8 +3,11 @@
 import { Content, asImagePixelDensitySrcSet, asImageSrc, isFilled } from '@prismicio/client';
 import {gsap} from 'gsap';
 import Link from 'next/link';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MdArrowOutward } from 'react-icons/md';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger)
 
 type ContentListProps = {
     items: Content.BlogPostDocument[] | Content.ProjectDocument[];
@@ -17,10 +20,38 @@ export default function ContentList({items, contentType, fallbackItemImage, view
 
     const component = useRef(null)
     const revealRef = useRef(null)
+    const itemsRef = useRef<Array<HTMLLIElement | null>>([]);
     const [currentItem, setCurrentItem] = useState<null | number>(null)
 
     const lastMousePos = useRef({x: 0, y: 0});
     const urlPrefix = contentType === "Blog" ? "/blog" : "/project";
+
+    useEffect(()=> {
+        let ctx = gsap.context(()=> {
+            itemsRef.current.forEach((item, index)=> {
+                gsap.fromTo(item, {
+                    opacity: 0, 
+                    y: 20,
+                },
+                {
+                    opacity: 1, 
+                    y: 0,
+                    duration: 1.3,
+                    ease: "elastic.out(1, 0.3)",
+                    stagger: 0.2,
+                    scrollTrigger: {
+                        trigger: item, 
+                        start: "top bottom-=100px",
+                        end: "bottom center",
+                        toggleActions: "play none none none",
+                    }
+                },
+                )
+            });
+
+            return () => ctx.revert();
+        }, component);
+    }, []);
 
 
     useEffect(()=> {
@@ -58,6 +89,8 @@ export default function ContentList({items, contentType, fallbackItemImage, view
         }
     }, [currentItem]);
 
+    
+
     const contentImages = items.map((item)=>{
         const image = isFilled.image(item.data.hover_image) ? item.data.hover_image : fallbackItemImage;
 
@@ -67,7 +100,15 @@ export default function ContentList({items, contentType, fallbackItemImage, view
             h: 320,
             exp: -10
         })
-    })
+    });
+    
+    useEffect(()=>{
+        contentImages.forEach((url)=> {
+            if(!url) return;
+            const img = new Image();
+            img.src = url;
+        });
+    }, [contentImages])
 
     const onMouseEnter = (index: number) =>{
         setCurrentItem(index)
@@ -86,7 +127,9 @@ export default function ContentList({items, contentType, fallbackItemImage, view
                 {isFilled.keyText(item.data.title) && (
             <li key={index} className='list-item opacity-0f'
             onMouseEnter={()=> onMouseEnter(index)}
-            
+            ref={(el) => (
+                itemsRef.current[index] = el
+            )}
             >
                 <Link href={urlPrefix + "/" + item.uid} 
                 className='flex flex-col justify-between border-t border-t-slate-100 py-10 text-slate-200 md:flex-row'
